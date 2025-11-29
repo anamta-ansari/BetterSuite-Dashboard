@@ -4,6 +4,6 @@ const HeatmapPage = dynamic(() => import("../Components/heatmap"), {
   ssr: false, // 🔥 MUST HAVE — prevents Vercel build error
 });
 
-export default function Page() {
+export default function heatmap() {
   return <HeatmapPage />;
 }
