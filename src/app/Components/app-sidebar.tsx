@@ -117,9 +117,9 @@ export function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <Sidebar className="lg:fixed lg:top-20 lg:left-0 lg:h-[calc(100vh-5rem)] lg:w-64 w-full bg-white shadow-none lg:shadow">
+    <Sidebar className="lg:fixed lg:top-20 lg:left-0 lg:h-[calc(100vh-5rem)] lg:w-50 w-full bg-white shadow-none lg:shadow">
       <SidebarHeader />
-      <SidebarContent>
+      <SidebarContent >
         <SidebarGroup>
           <SidebarGroupLabel className="text-[18px] ml-3 mb-8 font-normal">
             Better Taxi
