@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use client";
 
 import { useEffect, useState, useRef } from "react";
@@ -160,4 +161,13 @@ export default function HeatmapPage() {
       </div>
     </div>
   );
+=======
+
+
+import HeatmapPage from "../Components/heatmap";
+
+export default function heatmap() {
+  return <HeatmapPage />;
+>>>>>>> a403f1b3d8686ebe5d5e375a95b8f3475231ffe8
 }
+

@@ -1,85 +1,125 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-// @ts-ignore
-import HeatmapOverlay from "leaflet-heatmap";
 
 export default function HeatmapPage() {
-  const mapRef = useRef<L.Map | null>(null);
-  const heatmapLayerRef = useRef<any>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<any>(null);
+  const heatmapRef = useRef<any>(null);
+
   const [showHeatmap, setShowHeatmap] = useState(true);
   const [useAltGradient, setUseAltGradient] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Original and alternative gradient
-  const originalGradient = { 0.1: "blue", 0.3: "lime", 0.6: "orange", 1: "red" };
-  const altGradient = { 0.1: "purple", 0.3: "pink", 0.6: "yellow", 1: "green" };
-
-  // Sample data
-  const points = [
-    { lat: 24.8607, lng: 67.0011, count: 5 },
-    { lat: 24.8700, lng: 67.0100, count: 8 },
-    { lat: 24.8500, lng: 67.0200, count: 3 },
-    { lat: 24.8800, lng: 67.0300, count: 6 },
+  // Google Maps gradients
+  const originalGradient = [
+    "rgba(0, 0, 255, 0)",
+    "blue",
+    "lime",
+    "orange",
+    "red",
   ];
 
-  const createHeatmapLayer = (gradient: any) => {
-    const cfg = {
-      radius: 0.007,
-      maxOpacity: 0.8,
-      scaleRadius: true,
-      useLocalExtrema: false,
-      latField: "lat",
-      lngField: "lng",
-      valueField: "count",
-      gradient,
-    };
-    const layer = new HeatmapOverlay(cfg);
-    layer.setData({ max: 10, data: points });
-    return layer;
+  const altGradient = [
+    "rgba(128, 0, 128, 0)",
+    "purple",
+    "pink",
+    "yellow",
+    "green",
+  ];
+
+  const points = [
+    { lat: 24.8607, lng: 67.0011, weight: 5 },
+    { lat: 24.8700, lng: 67.0100, weight: 8 },
+    { lat: 24.8500, lng: 67.0200, weight: 3 },
+    { lat: 24.8800, lng: 67.0300, weight: 6 },
+  ];
+
+  // Load Google Maps script dynamically
+  const loadGoogleScript = () => {
+    return new Promise<void>((resolve) => {
+      const existingScript = document.getElementById("google-maps-script");
+      if (existingScript) {
+        resolve();
+        return;
+      }
+
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+      if (!apiKey) {
+        console.error("❌ Google Maps API Key (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) is missing");
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.id = "google-maps-script";
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=visualization`;
+      script.async = true;
+      script.onload = () => resolve();
+
+      document.body.appendChild(script);
+    });
   };
 
+  // Initialize map
   useEffect(() => {
-    const map = L.map("heatmap").setView([24.8607, 67.0011], 12);
-    mapRef.current = map;
+    const initMap = async () => {
+      await loadGoogleScript();
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 18,
-    }).addTo(map);
+      const google = (window as any).google;
+      if (!google) {
+        console.error("❌ Google Maps failed to load.");
+        return;
+      }
 
+<<<<<<< HEAD
     const heatmapLayer = createHeatmapLayer(originalGradient);
     heatmapLayer.addTo(map);
     heatmapLayerRef.current = heatmapLayer;
+=======
+      const map = new google.maps.Map(mapContainerRef.current, {
+        center: { lat: 24.8607, lng: 67.0011 },
+        zoom: 12,
+      });
+
+      mapRef.current = map;
+
+      const heatmap = new google.maps.visualization.HeatmapLayer({
+        data: points.map((p) => ({
+          location: new google.maps.LatLng(p.lat, p.lng),
+          weight: p.weight,
+        })),
+        radius: 30,
+        opacity: 0.8,
+        gradient: originalGradient,
+      });
+
+      heatmap.setMap(map);
+      heatmapRef.current = heatmap;
+
+      setIsLoading(false);
+    };
+
+    initMap();
+>>>>>>> a403f1b3d8686ebe5d5e375a95b8f3475231ffe8
   }, []);
 
+  // Toggle heatmap visibility
   const handleToggleHeatmap = () => {
-    if (!mapRef.current || !heatmapLayerRef.current) return;
-    if (showHeatmap) {
-      mapRef.current.removeLayer(heatmapLayerRef.current);
-    } else {
-      mapRef.current.addLayer(heatmapLayerRef.current);
-    }
+    if (!heatmapRef.current) return;
+
+    heatmapRef.current.setMap(showHeatmap ? null : mapRef.current);
     setShowHeatmap(!showHeatmap);
   };
 
+  // Change gradient
   const handleChangeGradient = () => {
-    if (!mapRef.current || !heatmapLayerRef.current) return;
+    if (!heatmapRef.current) return;
 
-    // Remove current layer
-    mapRef.current.removeLayer(heatmapLayerRef.current);
-
-    // Create new layer with new gradient
-    const newGradient = useAltGradient ? originalGradient : altGradient;
-    const newLayer = createHeatmapLayer(newGradient);
-
-    // Add new layer to map
-    newLayer.addTo(mapRef.current);
-    heatmapLayerRef.current = newLayer;
-
-    // Toggle gradient state
+    heatmapRef.current.set(
+      "gradient",
+      useAltGradient ? originalGradient : altGradient
+    );
     setUseAltGradient(!useAltGradient);
   };
 
@@ -95,21 +135,41 @@ export default function HeatmapPage() {
         <div className="flex gap-3 mb-4">
           <button
             onClick={handleToggleHeatmap}
+<<<<<<< HEAD
             className=" px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+=======
+            disabled={isLoading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+>>>>>>> a403f1b3d8686ebe5d5e375a95b8f3475231ffe8
           >
             {showHeatmap ? "Hide Heatmap" : "Show Heatmap"}
           </button>
+
           <button
             onClick={handleChangeGradient}
+<<<<<<< HEAD
             className=" px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+=======
+            disabled={isLoading}
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition disabled:opacity-50"
+>>>>>>> a403f1b3d8686ebe5d5e375a95b8f3475231ffe8
           >
             Change Gradient
           </button>
         </div>
 
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 rounded-lg z-10">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading map...</p>
+            </div>
+          </div>
+        )}
+
         <div
-          id="heatmap"
-          className="w-full h-[400px] rounded-lg border shadow-sm"
+          ref={mapContainerRef}
+          className="w-full h-[400px] rounded-lg border shadow-sm relative"
         />
       </div>
     </div>
