@@ -32,7 +32,7 @@ export default function Home() {
 
   return (
     <main className="">
-      <h1 className="text-[32px] font-bold -mt-5">Hello World</h1>
+      <h1 className="text-[32px] font-bold -mt-5">Home</h1>
       <p className="text-[16px] mt-5 mb-8"><span className="text-gray-500">Today is  </span> {formattedDate}</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-1">
